@@ -14,7 +14,7 @@
 
 ## 术：工程实践
 
-- **核心架构:** 严格遵循 `docs/BackendStructure.md` 中定义的 workspace crate 边界。`rusttavern` host 只承载 axum HTTP 服务器、composition、commands、host-bound infrastructure/resource glue；HTTP-free concrete IO 应放入对应 `tt-adapter-*` crate。
+- **核心架构:** 严格遵循 `docs/architecture/BackendStructure.md` 中定义的 workspace crate 边界。`rusttavern` host 只承载 axum HTTP 服务器、composition、commands、host-bound infrastructure/resource glue；HTTP-free concrete IO 应放入对应 `tt-adapter-*` crate。
 - **Rust 哲学:** 编写符合 Rust 习惯的惯用代码（idiomatic code）。优先使用 `Result` 和 `thiserror`/`anyhow` 进行错误处理。注意所有权和借用规则。
 - **模块化与抽象:** repository trait / outbound port 放在 `tt-ports`；具体实现放在 adapter crate。不要为单个实现新增无意义 trait、factory 或 facade。
 - **代码复用 (DRY):** 先复用项目已有 helper；不要为了“看起来通用”抽出跨 bounded context 的清洗器、格式库或抽象层。
@@ -26,5 +26,5 @@
 - **命令注册:** command 定义在 `presentation` 层，经 `register!`/`register_sync!` 宏注册到 `registry.rs`（HTTP 分发入口 `POST /__tt/invoke/{command}`），并应调用 `application` 层的服务来执行业务逻辑，避免在命令中直接处理复杂逻辑或操作基础设施。
 - **注释:** 为复杂、非显而易见的逻辑或算法添加清晰、简洁的注释。
 - **测试:** 核心仓储迁移或格式语义变更必须保留最小可运行测试；优先运行受影响 crate 的 focused tests 与 `scripts/check-rust-crate-boundaries.mjs`。每次实现完成后都必须运行 harness：`pnpm run check`。
-- **编译节奏（本机硬件极差，硬性约定）:** 本机 i5-3210m（2 核 4 线程）+ 8GB 内存——**cargo check/test/clippy 一律不跑**。改完 Rust 只做一件事：**`cargo build -p rusttavern`（debug profile）一次**，改一个 crate 的增量约 17-19 秒，首次全量约 11 分钟；debug 二进制可直接启动做运行时 E2E。**release 只在出货时构建**（全量约 30 分钟，增量 10-13 分钟——LTO 链接占大头），构建参数与加速配置见 `docs/CurrentState/NextHarnessHandoff.md` §4.2，**不要回退 cargo profile / linker 配置**（改 profile 会让所有 crate 失效）。build 失败则修完全部报错再 build 一次；Rust 正确性以 build 成功 + 运行时 E2E 验证为准。纯前端（JS）改动先跑轻量门（`check:frontend` + `check:types` + 受影响 node 契约测试），不触发任何 cargo 任务。**除非用户明确要求，禁止启动任何 cargo 任务**。
-- **前端交互:** 注意 `docs/FrontendGuide.md` 中关于与前端交互的说明，特别是 DTO 和事件的约定。
+- **编译节奏（本机硬件极差，硬性约定）:** 本机 i5-3210m（2 核 4 线程）+ 8GB 内存——**cargo check/test/clippy 一律不跑**。改完 Rust 只做一件事：**`cargo build -p rusttavern`（debug profile）一次**，改一个 crate 的增量约 17-19 秒，首次全量约 11 分钟；debug 二进制可直接启动做运行时 E2E。**release 只在出货时构建**（全量约 30 分钟，增量 10-13 分钟——LTO 链接占大头），构建参数与加速配置见 `docs/history/handoff/NextHarnessHandoff.md` §4.2，**不要回退 cargo profile / linker 配置**（改 profile 会让所有 crate 失效）。build 失败则修完全部报错再 build 一次；Rust 正确性以 build 成功 + 运行时 E2E 验证为准。纯前端（JS）改动先跑轻量门（`check:frontend` + `check:types` + 受影响 node 契约测试），不触发任何 cargo 任务。**除非用户明确要求，禁止启动任何 cargo 任务**。
+- **前端交互:** 注意 `docs/architecture/FrontendGuide.md` 中关于与前端交互的说明，特别是 DTO 和事件的约定。

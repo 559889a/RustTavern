@@ -31,17 +31,17 @@ const PRODUCT = 'RustTavern';
 const EXCLUDED_TRACKED = [
     // Local build/verification harness notes: exact local paths, local ports,
     // the phone deployment topology and its LAN addresses.
-    'docs/CurrentState/NextHarnessHandoff.md',
+    'docs/history/handoff/NextHarnessHandoff.md',
     // Same category as the handoff notes above: absolute workspace paths, the
     // phone's ssh key filename and port, and this network's addresses.
-    'docs/CurrentState/ClaudeCodeHandoff.md',
+    'docs/history/handoff/ClaudeCodeHandoff.md',
     // Frontend-perf handoff brief for the next (browser-capable) harness on
     // this machine: same category — local paths and workflow notes.
-    'docs/CurrentState/FrontendPerfHandoff.md',
+    'docs/history/handoff/FrontendPerfHandoff.md',
     // Migration work log: records this machine's cargo mirror config, absolute
     // workspace paths and offline-CRL workarounds. Project history, not
     // something a recipient can act on.
-    'docs/CurrentState/HttpServerMigrationLog.md',
+    'docs/history/handoff/HttpServerMigrationLog.md',
     // Termux packaging: the ship command carries an ssh port and key filename,
     // and the verification record names the developer's own subnet.
     'packaging/termux/README.md',

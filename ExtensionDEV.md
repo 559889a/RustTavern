@@ -41,7 +41,7 @@ RustTavern 的 third-party 扩展目录与 SillyTavern 兼容：
 
 资源端点：`/scripts/extensions/third-party/<folder>/<path>`
 
-> 更多细节：[ThirdPartyExtensions.md](docs/CurrentState/ThirdPartyExtensions.md)
+> 更多细节：[ThirdPartyExtensions.md](docs/state/ThirdPartyExtensions.md)
 
 ### 1.2 等待宿主就绪
 
@@ -156,8 +156,8 @@ const meta = await handle.metadata.get();
 
 详细参数与返回值请查阅：
 
-- 📖 **[API 参考](docs/API/Chat.md)** — 完整接口说明
-- 🔄 **[适配指南](docs/API/Migration.md)** — 从 SillyTavern 扩展快速适配
+- 📖 **[API 参考](docs/api/Chat.md)** — 完整接口说明
+- 🔄 **[适配指南](docs/api/Migration.md)** — 从 SillyTavern 扩展快速适配
 
 ---
 
@@ -217,4 +217,4 @@ const unsubscribe = await subscribeLayout((snap) => {
 ```
 
 完整参考：
-- 📖 **[Layout API](docs/API/Layout.md)** — `api.layout` + mobile surface contract 说明
+- 📖 **[Layout API](docs/api/Layout.md)** — `api.layout` + mobile surface contract 说明

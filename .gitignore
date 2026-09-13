@@ -59,10 +59,10 @@ flatpak-build.tar.zst
 
 # 本机内部文档：含本机绝对路径、局域网地址、手机 ssh 密钥名与部署拓扑。
 # 只用于本地开发，不进公开仓库（pack-dist 也已将它们排除在分发之外）。
-docs/CurrentState/ClaudeCodeHandoff.md
-docs/CurrentState/NextHarnessHandoff.md
-docs/CurrentState/FrontendPerfHandoff.md
-docs/CurrentState/HttpServerMigrationLog.md
+docs/history/handoff/ClaudeCodeHandoff.md
+docs/history/handoff/NextHarnessHandoff.md
+docs/history/handoff/FrontendPerfHandoff.md
+docs/history/handoff/HttpServerMigrationLog.md
 packaging/termux/README.md
 packaging/windows/README.md
 scripts/local-android-build.sh

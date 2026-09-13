@@ -24,13 +24,13 @@ test('library shims expose lodash as the SillyTavern underscore ABI', async () =
 });
 
 test('library shim ABI is documented for third-party compatibility', async () => {
-    const hostContract = await readRepoFile('docs/FrontendHostContract.md');
+    const hostContract = await readRepoFile('docs/architecture/FrontendHostContract.md');
     assert.match(hostContract, /`window\._ : lodash`/);
     assert.match(hostContract, /third-party 扩展模块加载前可用/);
 
-    const thirdPartyState = await readRepoFile('docs/CurrentState/ThirdPartyExtensions.md');
+    const thirdPartyState = await readRepoFile('docs/state/ThirdPartyExtensions.md');
     assert.match(thirdPartyState, /`window\._`（lodash）是正式兼容 ABI/);
 
-    const startupState = await readRepoFile('docs/CurrentState/StartupOptimization.md');
+    const startupState = await readRepoFile('docs/state/StartupOptimization.md');
     assert.match(startupState, /`window\._ = lodash` 是正式 ABI/);
 });

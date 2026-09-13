@@ -294,13 +294,17 @@ POST /__tt/invoke/{command} → presentation command → tt-application service 
 
 ## 文档
 
-- [docs/ProjectStructure.md](docs/ProjectStructure.md) —— 逐目录结构与职责导航（crate、请求链路、数据根、测试）
-- [docs/TechStack.md](docs/TechStack.md) —— 技术栈与工程守护入口
-- [docs/BackendStructure.md](docs/BackendStructure.md) —— 后端 Clean Architecture 与 crate 边界
-- [docs/FrontendGuide.md](docs/FrontendGuide.md) —— 前端架构与扩展指南
-- [docs/FrontendHostContract.md](docs/FrontendHostContract.md) —— 宿主层对外契约
-- [docs/API/README.md](docs/API/README.md) —— `window.__RUSTTAVERN__.api.*` 扩展 API 参考
-- [docs/CurrentState/](docs/CurrentState/) —— 各模块已落地的实现状态
+文档目录按**用途**分层（架构 / 扩展 API / 契约 / 现状 / 历史），完整索引见 **[docs/README.md](docs/README.md)**。常用入口：
+
+- [docs/architecture/ProjectStructure.md](docs/architecture/ProjectStructure.md) —— 逐目录结构与职责导航（crate、请求链路、数据根、测试）
+- [docs/architecture/TechStack.md](docs/architecture/TechStack.md) —— 技术栈与工程守护入口
+- [docs/architecture/BackendStructure.md](docs/architecture/BackendStructure.md) —— 后端 Clean Architecture 与 crate 边界
+- [docs/architecture/FrontendGuide.md](docs/architecture/FrontendGuide.md) —— 前端架构与扩展指南
+- [docs/architecture/FrontendHostContract.md](docs/architecture/FrontendHostContract.md) —— 宿主层对外契约
+- [docs/api/README.md](docs/api/README.md) —— `window.__RUSTTAVERN__.api.*` 扩展 API 参考
+- [docs/contracts/](docs/contracts/) —— 跨模块长期契约（provider state、角色身份、host resource 缓存…）
+- [docs/state/](docs/state/) —— 各模块「现状」快照
+- [docs/history/](docs/history/) —— 已完成的迁移与实施记录（历史归档）
 
 ## 许可与致谢
 

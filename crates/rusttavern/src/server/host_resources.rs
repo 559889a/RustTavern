@@ -3,7 +3,7 @@
 //! Converts an axum request into the `http::Request<Vec<u8>>` shape the
 //! service expects, delegates to `try_serve`, and converts the response back.
 //! Preserves the existing 404/ETag/Cache-Control/Range semantics implemented
-//! by the service (see `docs/CurrentState/HostResourceCaching.md` and
+//! by the service (see `docs/contracts/HostResourceCaching.md` and
 //! `MediaAssetContract.md`).
 
 use std::sync::Arc;

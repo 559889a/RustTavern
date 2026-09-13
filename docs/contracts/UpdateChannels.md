@@ -1,0 +1,42 @@
+# 更新渠道当前契约
+
+RustTavern 只维护 `stable` 与 `canary` 两个更新渠道。更新功能只负责检测和引导下载，不在应用内安装更新。
+
+Linux 系统软件源默认使用 `stable`，并提供独立的 `canary` 套件。APT/DNF/Zypper 根据系统的软件包数据库安装更新，与应用内 Stable/Canary 偏好相互独立；软件源地址、签名身份和安装方式见 `docs/state/LinuxRepository.md`。
+
+## 身份与默认渠道
+
+- 面向用户：Stable 显示版本号；Canary 显示中国标准日期，例如 `Canary Release 2026.06.14`。
+- 面向程序：Stable 按 SemVer 比较；Canary 把当前构建与远端 Git 提交都规范化为 12 位短哈希后精确比较。
+- 构建分支为精确的 `main` 时默认 `stable`，其他已知分支默认 `canary`；缺失分支信息时保守默认为 `stable`。
+- 用户可在版本扩展设置中覆盖默认渠道。该选择进入现有 settings 持久化链路。
+
+构建身份由 `RUSTTAVERN_BUILD_BRANCH` 和 `RUSTTAVERN_BUILD_REVISION` 注入；未显式提供时，构建脚本依次读取 GitHub Actions 环境和本地 Git。Canary 构建缺失或包含非法 revision 时必须明确失败，不能退回版本号比较。
+
+## 检测链路
+
+前端把有效渠道传给 `check_for_update` command，application service 决定比较语义，GitHub adapter 只负责读取渠道对应的数据：
+
+- Stable：`GET /repos/559889a/RustTavern/releases/latest`
+- Canary：`GET /repos/559889a/RustTavern/releases/tags/Canary` 与 `GET /repos/559889a/RustTavern/commits/Canary`
+
+Canary Release 必须是 prerelease；Stable latest 不能是 prerelease。返回给前端的 `release_token` 是机器去重键：Stable 使用 tag，Canary 使用 `sha12`。弹窗主要展示 Release name，因此 Canary 的时间格式由发布流水线统一产生。
+
+## Canary 发布链路
+
+`.github/workflows/canary-release.yml` 从 `dev` 的同一提交构建全部平台，完整产物通过后才更新固定的 `Canary` Release 和 tag。Stable 与 Canary 共用面向用户的产物命名契约：
+
+```text
+RustTavern-<release-id>-<platform>-<arch>[-<variant>][.<ext>]
+```
+
+Stable 的 `release-id` 是版本号；Canary 使用 `<YYYYMMDD>-canary`，日期以 `Asia/Shanghai` 计算。平台统一使用 `windows`、`macos`、`linux`，架构统一使用 `x64` / `arm64`。扩展名已经能区分包格式时不重复添加 kind；Linux portable 是无扩展名的原生可执行文件。Release 标题使用 `Canary Release <YYYY.MM.DD>`。tag 最后移动到已发布提交，因此客户端不会先看到尚未完成的构建。
+
+Release notes 先由 Git 历史生成确定性上下文和回退正文。独立的只读 Codex job 使用 `CANARY_CODEX_API_KEY`、`CANARY_CODEX_RESPONSES_ENDPOINT`、`CANARY_CODEX_MODEL` 与 `CANARY_CODEX_EFFORT` secrets 检查实际 diff，再通过项目专用 Skill 撰写中英双语正文。Skill 源文件保存在不会被本地 Codex 自动发现的 `.github/codex/skills/`，CI 只把它们复制到 runner 临时 `CODEX_HOME`。Codex 调用失败或输出不符合结构时直接使用确定性正文，不影响构建和发布。
+
+## 维护约束
+
+1. 不要用显示时间判断更新；时间只服务用户认知，提交 SHA 才是 Canary 身份。
+2. 一个 Release 必须对应一个源码提交；不要让多个平台各自推进 Canary tag。
+3. 不要让 AI 决定版本、产物、发布条件或 tag；AI 只能改写已经生成的事实。
+4. 修改渠道 DTO、settings 或 command 时，保持 Rust serde 名称与前端字符串 `stable` / `canary` 一致。

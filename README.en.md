@@ -310,13 +310,17 @@ tt-ports trait → tt-adapter-*`.
 
 ## Documentation
 
-- [docs/ProjectStructure.md](docs/ProjectStructure.md) — directory-by-directory map of what lives where and what calls it
-- [docs/TechStack.md](docs/TechStack.md) — tech stack and engineering guards
-- [docs/BackendStructure.md](docs/BackendStructure.md) — backend Clean Architecture and crate boundaries
-- [docs/FrontendGuide.md](docs/FrontendGuide.md) — frontend architecture and extension guide
-- [docs/FrontendHostContract.md](docs/FrontendHostContract.md) — host-layer contract
-- [docs/API/README.md](docs/API/README.md) — `window.__RUSTTAVERN__.api.*` extension API reference
-- [docs/CurrentState/](docs/CurrentState/) — implementation status of each landed module
+The docs tree is layered by **purpose** (architecture / extension API / contracts / current state / history). Full index: **[docs/README.md](docs/README.md)**. Common entry points:
+
+- [docs/architecture/ProjectStructure.md](docs/architecture/ProjectStructure.md) — directory-by-directory map of what lives where and what calls it
+- [docs/architecture/TechStack.md](docs/architecture/TechStack.md) — tech stack and engineering guards
+- [docs/architecture/BackendStructure.md](docs/architecture/BackendStructure.md) — backend Clean Architecture and crate boundaries
+- [docs/architecture/FrontendGuide.md](docs/architecture/FrontendGuide.md) — frontend architecture and extension guide
+- [docs/architecture/FrontendHostContract.md](docs/architecture/FrontendHostContract.md) — host-layer contract
+- [docs/api/README.md](docs/api/README.md) — `window.__RUSTTAVERN__.api.*` extension API reference
+- [docs/contracts/](docs/contracts/) — long-lived cross-module contracts (provider state, character identity, host-resource caching, …)
+- [docs/state/](docs/state/) — current implementation snapshots per module
+- [docs/history/](docs/history/) — completed migration and implementation records (archive)
 
 ## License and credits
 

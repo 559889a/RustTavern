@@ -5,7 +5,7 @@
 //
 // `@import` is only discovered after the importing sheet has been fetched and
 // parsed, so every import level is another round trip. The hints in index.html
-// move those fetches into the first wave (docs/CurrentState/NextHarnessHandoff.md
+// move those fetches into the first wave (docs/history/handoff/NextHarnessHandoff.md
 // §8F.2), which makes the two lists duplicated data: adding an `@import` without
 // a hint silently gives that sheet its own round trip back.
 //
