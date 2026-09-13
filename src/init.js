@@ -2,20 +2,6 @@
 
 window.__TAURI_RUNNING__ = true;
 
-// In some WebKit builds, `location.href` may omit the trailing slash for origin-only
-// URLs (e.g. `tauri://localhost`). jQuery UI Tabs uses `anchor.href` vs
-// `location.href` (sans hash) to decide whether a tab is local; the mismatch can
-// cause it to treat hash tabs as remote and AJAX-load the current document into a
-// tab panel. Normalize the URL early to match `document.baseURI`.
-if (
-    globalThis.location?.protocol === 'tauri:'
-    && globalThis.document?.baseURI
-    && globalThis.document.baseURI.endsWith('/')
-    && globalThis.location.href === globalThis.document.baseURI.slice(0, -1)
-) {
-    globalThis.history.replaceState(null, '', globalThis.document.baseURI);
-}
-
 const PERF_ENABLED = (() => {
     try {
         if (globalThis.localStorage?.getItem('tt:perf') === '1') {
@@ -193,9 +179,8 @@ async function setupDevThirdPartyExtensionServiceWorker() {
         });
     };
 
-    const protocol = window.location?.protocol || '';
     const hostname = window.location?.hostname || '';
-    if (!hostname || protocol === 'tauri:' || hostname === 'tauri.localhost') {
+    if (!hostname) {
         return;
     }
 

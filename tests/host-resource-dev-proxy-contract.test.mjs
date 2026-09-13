@@ -47,7 +47,10 @@ test('dev service worker proxies the same browser host resources as production',
     assert.match(init, /fetch\(targetUrl\.href/);
     assert.match(init, /installClientProxyBridge\(ttExtBaseUrl\)/);
     assert.match(init, /method,\s*\n\s*headers,/);
-    assert.match(init, /protocol === 'tauri:' \|\| hostname === 'tauri\.localhost'/);
+    // Registration is skipped when the page has no hostname at all (non-http
+    // origins). The Tauri-origin guards that used to sit here went away with
+    // the Tauri shell — the server is only ever reached over http(s) now.
+    assert.match(init, /const hostname = window\.location\?\.hostname \|\| '';\s*\n\s*if \(!hostname\) \{/);
     assert.match(sw, /status === 204 \|\| status === 205 \|\| status === 304/);
     // The axum host-resource delivery preserves the service semantics (404
     // fallback, browser delivery capabilities).

@@ -180,18 +180,6 @@ export function installDynamicTheme() {
 
                 updateSystemThemeAndSync(nextTheme, 'visibilitychange');
             });
-
-            const listen = window.__TAURI__?.event?.listen;
-            if (typeof listen !== 'function') {
-                // Server mode: no native theme events; matchMedia covers the
-                // preferred color scheme.
-                return;
-            }
-
-            void listen('tauri://theme-changed', (/** @type {any} */ event) => {
-                const nextTheme = event?.payload === 'dark' ? 'dark' : 'light';
-                updateSystemThemeAndSync(nextTheme, 'tauri://theme-changed');
-            });
         });
     });
 
