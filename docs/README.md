@@ -4,16 +4,17 @@
 
 ## 文档目录
 
-1. [技术栈文档](./TechStack.md) - 当前技术栈、Clean Architecture 约束和工程守护入口
-2. [前端指南](./FrontendGuide.md) - 前端代码结构、宿主注入启动链与模块化路由开发指南
-3. [前端宿主契约](./FrontendHostContract.md) - Host Kernel 对上游/插件/脚本可观察行为的契约清单（重构必读）
-4. [后端结构](./BackendStructure.md) - Rust workspace crate 边界、依赖方向和 Clean Architecture 实践
-5. [现状说明](./CurrentState/README.md) - 当前实现状态快照与持续开发约束
-6. [扩展 API 文档](./API/README.md) - `window.__RUSTTAVERN__.api.*` 的参考与适配指南（面向扩展作者）
-7. [Agent 架构文档](./AgentArchitecture.md) - Agent Runtime 的高层架构入口
-8. [Agent 细节文档](./Agent/README.md) - Workspace、Journal、Tool、LLM Gateway、MCP/SKILL 与测试策略
-9. [HTTP Server 迁移方案](./HttpServerMigrationPlan.md) - 去 Tauri 化、终端启动 HTTP 服务器 + 浏览器 WebUI 的迁移蓝图（已实施完成）
-10. [迁移后收尾计划](./PostMigrationOptimizationPlan.md) - Wave 0-6 收尾任务书：服务端/前端修复、性能优化与发布链路（已执行完毕，含 webui invoke 契约根因修复记录）
+1. [项目结构](./ProjectStructure.md) - 逐目录说明「这里有什么、谁调用它」：crate 职责、请求链路、数据根布局、测试与脚本
+2. [技术栈文档](./TechStack.md) - 当前技术栈、Clean Architecture 约束和工程守护入口
+3. [前端指南](./FrontendGuide.md) - 前端代码结构、宿主注入启动链与模块化路由开发指南
+4. [前端宿主契约](./FrontendHostContract.md) - Host Kernel 对上游/插件/脚本可观察行为的契约清单（重构必读）
+5. [后端结构](./BackendStructure.md) - Rust workspace crate 边界、依赖方向和 Clean Architecture 实践
+6. [现状说明](./CurrentState/README.md) - 当前实现状态快照与持续开发约束
+7. [扩展 API 文档](./API/README.md) - `window.__RUSTTAVERN__.api.*` 的参考与适配指南（面向扩展作者）
+8. [Agent 架构文档](./AgentArchitecture.md) - Agent Runtime 的高层架构入口
+9. [Agent 细节文档](./Agent/README.md) - Workspace、Journal、Tool、LLM Gateway、MCP/SKILL 与测试策略
+10. [HTTP Server 迁移方案](./HttpServerMigrationPlan.md) - 去 Tauri 化、终端启动 HTTP 服务器 + 浏览器 WebUI 的迁移蓝图（已实施完成）
+11. [迁移后收尾计划](./PostMigrationOptimizationPlan.md) - Wave 0-6 收尾任务书：服务端/前端修复、性能优化与发布链路（已执行完毕，含 webui invoke 契约根因修复记录）
 
 ## 项目概述
 

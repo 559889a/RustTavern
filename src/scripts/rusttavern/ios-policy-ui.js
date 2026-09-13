@@ -95,10 +95,7 @@ export function applyIosPolicyUiProjection() {
 
     if (report.profile === 'ios_external_beta') {
         cssRules.push(`
-            body[data-tt-ios-policy-scope="ios"][data-tt-ios-policy-profile="ios_external_beta"] #ttv-compat-row,
-            body[data-tt-ios-policy-scope="ios"][data-tt-ios-policy-profile="ios_external_beta"] #ttv-discord-link,
-            body[data-tt-ios-policy-scope="ios"][data-tt-ios-policy-profile="ios_external_beta"] #ttv-telegram-link,
-            body[data-tt-ios-policy-scope="ios"][data-tt-ios-policy-profile="ios_external_beta"] #tt-welcome-discord-link {
+            body[data-tt-ios-policy-scope="ios"][data-tt-ios-policy-profile="ios_external_beta"] #ttv-compat-row {
                 display: none !important;
             }
         `);

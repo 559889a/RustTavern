@@ -294,6 +294,7 @@ POST /__tt/invoke/{command} → presentation command → tt-application service 
 
 ## 文档
 
+- [docs/ProjectStructure.md](docs/ProjectStructure.md) —— 逐目录结构与职责导航（crate、请求链路、数据根、测试）
 - [docs/TechStack.md](docs/TechStack.md) —— 技术栈与工程守护入口
 - [docs/BackendStructure.md](docs/BackendStructure.md) —— 后端 Clean Architecture 与 crate 边界
 - [docs/FrontendGuide.md](docs/FrontendGuide.md) —— 前端架构与扩展指南

@@ -310,6 +310,7 @@ tt-ports trait → tt-adapter-*`.
 
 ## Documentation
 
+- [docs/ProjectStructure.md](docs/ProjectStructure.md) — directory-by-directory map of what lives where and what calls it
 - [docs/TechStack.md](docs/TechStack.md) — tech stack and engineering guards
 - [docs/BackendStructure.md](docs/BackendStructure.md) — backend Clean Architecture and crate boundaries
 - [docs/FrontendGuide.md](docs/FrontendGuide.md) — frontend architecture and extension guide

@@ -20,8 +20,6 @@ const MODULE_NAME = 'rusttavern-version';
 const LINKS = Object.freeze({
     authorName: 'Darkatse',
     repositoryUrl: 'https://github.com/559889a/RustTavern',
-    discordUrl: 'https://discord.gg/hn57aFGe8h',
-    telegramUrl: 'https://t.me/RustTavern',
 });
 
 const UNKNOWN_VALUE = 'UNKNOWN';
@@ -622,18 +620,6 @@ jQuery(async () => {
             throw new Error('[RustTavern][iOSPolicy] ttv-compat-row not found');
         }
         compatRow.hidden = true;
-
-        const discordLink = document.getElementById('ttv-discord-link');
-        if (!(discordLink instanceof HTMLElement)) {
-            throw new Error('[RustTavern][iOSPolicy] ttv-discord-link not found');
-        }
-        discordLink.hidden = true;
-
-        const telegramLink = document.getElementById('ttv-telegram-link');
-        if (!(telegramLink instanceof HTMLElement)) {
-            throw new Error('[RustTavern][iOSPolicy] ttv-telegram-link not found');
-        }
-        telegramLink.hidden = true;
     } else {
         $('#rusttavern_check_update').on('click', onCheckUpdateClick);
     }
