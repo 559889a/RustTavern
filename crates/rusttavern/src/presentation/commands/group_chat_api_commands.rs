@@ -1,0 +1,237 @@
+use std::sync::Arc;
+
+use serde_json::Value;
+use crate::app::AppState;
+use crate::presentation::commands::helpers::{log_command, map_command_error};
+use crate::presentation::errors::CommandError;
+use tt_application::dto::chat_dto::ChatSearchResultDto;
+use tt_ports::repositories::chat_types::{
+    ChatMessageSearchHit, ChatMessageSearchQuery, FindLastMessageQuery, LocatedChatMessage,
+};
+
+pub async fn get_group_chat_summary(
+    chat_id: String,
+    include_metadata: Option<bool>,
+    state: Arc<AppState>,
+) -> Result<ChatSearchResultDto, CommandError> {
+    log_command(format!("get_group_chat_summary {}", chat_id));
+
+    state
+        .services
+        .group_chat_service
+        .get_group_chat_summary(&chat_id, include_metadata.unwrap_or(false))
+        .await
+        .map_err(map_command_error(format!(
+            "Failed to get group chat summary {}",
+            chat_id
+        )))
+}
+
+pub async fn get_group_chat_metadata(
+    chat_id: String,
+    state: Arc<AppState>,
+) -> Result<Value, CommandError> {
+    log_command(format!("get_group_chat_metadata {}", chat_id));
+
+    state
+        .services
+        .group_chat_service
+        .get_group_chat_metadata(&chat_id)
+        .await
+        .map_err(map_command_error(format!(
+            "Failed to get group chat metadata {}",
+            chat_id
+        )))
+}
+
+pub async fn set_group_chat_metadata_extension(
+    chat_id: String,
+    namespace: String,
+    value: Value,
+    state: Arc<AppState>,
+) -> Result<(), CommandError> {
+    log_command(format!(
+        "set_group_chat_metadata_extension {}:{}",
+        chat_id, namespace
+    ));
+
+    state
+        .services
+        .group_chat_service
+        .set_group_chat_metadata_extension(&chat_id, &namespace, value)
+        .await
+        .map_err(map_command_error(format!(
+            "Failed to set group chat metadata extension {}:{}",
+            chat_id, namespace
+        )))
+}
+
+pub async fn get_group_chat_store_json(
+    chat_id: String,
+    namespace: String,
+    key: String,
+    state: Arc<AppState>,
+) -> Result<Value, CommandError> {
+    log_command(format!(
+        "get_group_chat_store_json {}:{}/{}",
+        chat_id, namespace, key
+    ));
+
+    state
+        .services
+        .group_chat_service
+        .get_group_chat_store_json(&chat_id, &namespace, &key)
+        .await
+        .map_err(map_command_error(format!(
+            "Failed to get group chat store json {}:{}/{}",
+            chat_id, namespace, key
+        )))
+}
+
+pub async fn set_group_chat_store_json(
+    chat_id: String,
+    namespace: String,
+    key: String,
+    value: Value,
+    state: Arc<AppState>,
+) -> Result<(), CommandError> {
+    log_command(format!(
+        "set_group_chat_store_json {}:{}/{}",
+        chat_id, namespace, key
+    ));
+
+    state
+        .services
+        .group_chat_service
+        .set_group_chat_store_json(&chat_id, &namespace, &key, value)
+        .await
+        .map_err(map_command_error(format!(
+            "Failed to set group chat store json {}:{}/{}",
+            chat_id, namespace, key
+        )))
+}
+
+pub async fn update_group_chat_store_json(
+    chat_id: String,
+    namespace: String,
+    key: String,
+    value: Value,
+    state: Arc<AppState>,
+) -> Result<(), CommandError> {
+    log_command(format!(
+        "update_group_chat_store_json {}:{}/{}",
+        chat_id, namespace, key
+    ));
+
+    state
+        .services
+        .group_chat_service
+        .update_group_chat_store_json(&chat_id, &namespace, &key, value)
+        .await
+        .map_err(map_command_error(format!(
+            "Failed to update group chat store json {}:{}/{}",
+            chat_id, namespace, key
+        )))
+}
+
+pub async fn rename_group_chat_store_key(
+    chat_id: String,
+    namespace: String,
+    key: String,
+    new_key: String,
+    state: Arc<AppState>,
+) -> Result<(), CommandError> {
+    log_command(format!(
+        "rename_group_chat_store_key {}:{}/{} -> {}",
+        chat_id, namespace, key, new_key
+    ));
+
+    state
+        .services
+        .group_chat_service
+        .rename_group_chat_store_key(&chat_id, &namespace, &key, &new_key)
+        .await
+        .map_err(map_command_error(format!(
+            "Failed to rename group chat store key {}:{}/{} -> {}",
+            chat_id, namespace, key, new_key
+        )))
+}
+
+pub async fn delete_group_chat_store_json(
+    chat_id: String,
+    namespace: String,
+    key: String,
+    state: Arc<AppState>,
+) -> Result<(), CommandError> {
+    log_command(format!(
+        "delete_group_chat_store_json {}:{}/{}",
+        chat_id, namespace, key
+    ));
+
+    state
+        .services
+        .group_chat_service
+        .delete_group_chat_store_json(&chat_id, &namespace, &key)
+        .await
+        .map_err(map_command_error(format!(
+            "Failed to delete group chat store json {}:{}/{}",
+            chat_id, namespace, key
+        )))
+}
+
+pub async fn list_group_chat_store_keys(
+    chat_id: String,
+    namespace: String,
+    state: Arc<AppState>,
+) -> Result<Vec<String>, CommandError> {
+    log_command(format!(
+        "list_group_chat_store_keys {}:{}",
+        chat_id, namespace
+    ));
+
+    state
+        .services
+        .group_chat_service
+        .list_group_chat_store_keys(&chat_id, &namespace)
+        .await
+        .map_err(map_command_error(format!(
+            "Failed to list group chat store keys {}:{}",
+            chat_id, namespace
+        )))
+}
+
+pub async fn find_last_group_chat_message(
+    chat_id: String,
+    query: FindLastMessageQuery,
+    state: Arc<AppState>,
+) -> Result<Option<LocatedChatMessage>, CommandError> {
+    log_command(format!("find_last_group_chat_message {}", chat_id));
+
+    state
+        .services
+        .group_chat_service
+        .find_last_group_chat_message(&chat_id, query)
+        .await
+        .map_err(map_command_error(format!(
+            "Failed to locate last group chat message {}",
+            chat_id
+        )))
+}
+
+pub async fn search_group_chat_messages(
+    chat_id: String,
+    query: ChatMessageSearchQuery,
+    state: Arc<AppState>,
+) -> Result<Vec<ChatMessageSearchHit>, CommandError> {
+    log_command(format!("search_group_chat_messages {}", chat_id));
+
+    state
+        .services
+        .group_chat_service
+        .search_group_chat_messages(&chat_id, query)
+        .await
+        .map_err(map_command_error(format!(
+            "Failed to search group chat messages {}",
+            chat_id
+        )))
+}

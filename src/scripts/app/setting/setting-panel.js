@@ -1,0 +1,30 @@
+import { RUSTTAVERN_SETTINGS_BUTTON_ID } from './setting-panel/constants.js';
+import { installPairingListener } from './setting-panel/pairing-listener.js';
+import { installSyncListeners } from './setting-panel/sync-listeners.js';
+import { runOrPopup } from './setting-panel/popup-utils.js';
+
+export function installRustTavernSettingsPanel() {
+    installPairingListener();
+    installSyncListeners();
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', bindSettingsButton, { once: true });
+        return;
+    }
+
+    bindSettingsButton();
+}
+
+function bindSettingsButton() {
+    const button = document.getElementById(RUSTTAVERN_SETTINGS_BUTTON_ID);
+    if (!button) {
+        return;
+    }
+
+    button.addEventListener('click', () => {
+        runOrPopup(async () => {
+            const { openRustTavernSettingsPopup } = await import('./setting-panel/settings-popup.js');
+            await openRustTavernSettingsPopup();
+        });
+    });
+}

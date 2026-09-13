@@ -1,0 +1,76 @@
+[package]
+name = "rusttavern"
+version = "2.2.0"
+description = "SillyTavern-compatible HTTP server"
+authors = ["RustTavern Team"]
+edition = "2024"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+# Server form: only an rlib + the binary are needed. The old cdylib/staticlib
+# crate types (mobile) are gone; linking the cdylib exceeded the PE export
+# table limit with the merged host crate.
+name = "rusttavern_lib"
+crate-type = ["rlib"]
+
+[build-dependencies]
+serde_json = { workspace = true }
+
+[dependencies]
+axum = "0.8"
+http-body-util = "0.1"
+httpdate = "0.3"
+tokio-stream = { version = "0.1", features = ["sync", "time"] }
+tower = "0.5"
+serde_yaml = "0.9"
+clap = { version = "4", features = ["derive"] }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", default-features = false, features = ["ansi", "env-filter", "fmt", "std"] }
+tracing-appender = "0.2"
+chrono = { workspace = true }
+tokio = { version = "1", default-features = false, features = ["fs", "io-util", "macros", "net", "rt-multi-thread", "sync", "time"] }
+tokio-util = { version = "0.7", default-features = false, features = ["rt", "io", "io-util"] }
+futures-util = "0.3"
+reqwest = { workspace = true, features = ["http2", "json", "rustls", "socks", "stream"] }
+base64 = "0.22"
+bytes = "1"
+# Same feature as `zip` already enables, so flate2 is not rebuilt in a second
+# configuration: gzip-encoding for static frontend assets.
+flate2 = { version = "1", default-features = false, features = ["zlib-rs"] }
+rand = { workspace = true }
+uuid = { workspace = true }
+async-trait = "0.1"
+url = "2.4"
+percent-encoding = "2"
+zip = { version = "8", default-features = false, features = ["deflate-flate2-zlib-rs"] }
+mime_guess = "2.0.5"
+filetime = "0.2"
+qrcode = { version = "0.14", default-features = false, features = ["svg"] }
+dunce = "1"
+http = "1"
+mimalloc = { workspace = true }
+tt-domain = { path = "../tt-domain" }
+tt-contracts = { path = "../tt-contracts" }
+tt-ports = { path = "../tt-ports" }
+tt-application = { path = "../tt-application" }
+tt-adapter-http = { path = "../tt-adapter-http" }
+tt-adapter-tokenization = { path = "../tt-adapter-tokenization" }
+tt-adapter-sync = { path = "../tt-adapter-sync" }
+tt-adapter-archive = { path = "../tt-adapter-archive" }
+tt-adapter-extension = { path = "../tt-adapter-extension" }
+tt-adapter-provider-http = { path = "../tt-adapter-provider-http" }
+tt-adapter-storage-core = { path = "../tt-adapter-storage-core" }
+tt-adapter-storage-userdata = { path = "../tt-adapter-storage-userdata" }
+tt-adapter-media = { path = "../tt-adapter-media" }
+
+# TT-Sync v2 shared protocol crates. (crates.io)
+ttsync-contract = { workspace = true }
+ttsync-core = { workspace = true }
+
+[dev-dependencies]
+tt-application = { path = "../tt-application", features = ["test-support"] }
+image = { version = "0.24", default-features = false, features = ["png"] }

@@ -1,0 +1,175 @@
+name: Release
+
+# Push a tag (e.g. `v2.2.0`) to build every platform package and publish them to
+# a GitHub release. The tag must match the version in both Cargo.toml and
+# package.json, so a release can never ship a binary that reports a version the
+# repository does not declare.
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  verify-tag:
+    name: verify tag matches Cargo.toml and package.json
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Compare tag with declared versions
+        run: |
+          TAG="${GITHUB_REF_NAME#v}"
+          CARGO_VERSION=$(grep -m1 '^version' Cargo.toml | sed 's/.*"\(.*\)"/\1/')
+          NPM_VERSION=$(node -p "require('./package.json').version")
+          echo "tag=$TAG cargo=$CARGO_VERSION package.json=$NPM_VERSION"
+          if [ "$TAG" != "$CARGO_VERSION" ] || [ "$TAG" != "$NPM_VERSION" ]; then
+            echo "::error::tag v$TAG does not match Cargo.toml ($CARGO_VERSION) / package.json ($NPM_VERSION)"
+            exit 1
+          fi
+
+  build:
+    name: build & package (${{ matrix.label }})
+    needs: verify-tag
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - label: windows-x64
+            os: windows-latest
+          - label: linux-x64
+            os: ubuntu-latest
+          - label: macos-arm64
+            os: macos-14
+          - label: android-arm64
+            os: ubuntu-latest
+            android: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+          run_install: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Set up NDK
+        if: matrix.android
+        uses: nttld/setup-ndk@v1
+        id: setup-ndk
+        with:
+          ndk-version: r27c
+          add-to-path: true
+
+      # setup-ndk puts only the NDK root on PATH; the clang wrappers live one
+      # level deeper, and the CC/CXX/AR values below are bare names.
+      - name: Add NDK clang wrappers to PATH
+        if: matrix.android
+        run: echo "${{ steps.setup-ndk.outputs.ndk-path }}/toolchains/llvm/prebuilt/linux-x86_64/bin" >> "$GITHUB_PATH"
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.android && 'aarch64-linux-android' || '' }}
+
+      # Pinned: 4.x renamed the platform flag from `-p` to `-P`/`--platform`
+      # and treats `-p` as cargo's `--package` passthrough.
+      - name: Install cargo-ndk
+        if: matrix.android
+        run: cargo install cargo-ndk --locked --version 4.1.2
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: ". -> target"
+
+      - run: pnpm install --frozen-lockfile
+
+      # Desktop: build-server.mjs runs web:build, the cargo release build, and
+      # stages binary + src/ + default/ + templates into release/*.zip.
+      - name: Build and package (desktop)
+        if: ${{ !matrix.android }}
+        run: node scripts/build-server.mjs
+
+      # Termux: a native aarch64-linux-android binary (bionic libc) plus the
+      # frontend, config.yaml and start.sh, staged by pack-termux.mjs.
+      - name: Build (android arm64-v8a, API 24+)
+        if: matrix.android
+        env:
+          ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
+          ANDROID_NDK_ROOT: ${{ steps.setup-ndk.outputs.ndk-path }}
+          CC_aarch64_linux_android: aarch64-linux-android24-clang
+          CXX_aarch64_linux_android: aarch64-linux-android24-clang++
+          AR_aarch64_linux_android: llvm-ar
+        run: |
+          pnpm run web:build
+          cargo ndk -t arm64-v8a --platform 24 build --release -p rusttavern
+
+      - name: Package (android arm64)
+        if: matrix.android
+        run: node scripts/pack-termux.mjs
+
+      # Normalise the archive name to a user-facing label and hash it. The
+      # packagers name by the runner's node platform/arch, which is an internal
+      # detail; release assets use the label instead.
+      - name: Collect release assets
+        shell: bash
+        run: |
+          VERSION="${GITHUB_REF_NAME}"
+          mkdir -p dist
+          if [ "${{ matrix.android }}" = "true" ]; then
+            SRC="release/rusttavern-termux-arm64.tar.gz"
+            OUT="dist/RustTavern-${VERSION}-${{ matrix.label }}.tar.gz"
+          elif [ "${{ runner.os }}" = "Windows" ]; then
+            SRC="release/RustTavern-win32-x64.zip"
+            OUT="dist/RustTavern-${VERSION}-${{ matrix.label }}.zip"
+          elif [ "${{ runner.os }}" = "macOS" ]; then
+            SRC="release/RustTavern-darwin-arm64.zip"
+            OUT="dist/RustTavern-${VERSION}-${{ matrix.label }}.zip"
+          else
+            SRC="release/RustTavern-linux-x64.zip"
+            OUT="dist/RustTavern-${VERSION}-${{ matrix.label }}.zip"
+          fi
+          test -f "$SRC" || { echo "::error::missing $SRC"; ls -la release; exit 1; }
+          cp "$SRC" "$OUT"
+          # Hash with node: the runners do not all ship sha256sum/shasum.
+          node -e '
+            const crypto = require("crypto"), fs = require("fs"), path = require("path");
+            const file = process.argv[1];
+            const digest = crypto.createHash("sha256").update(fs.readFileSync(file)).digest("hex");
+            fs.writeFileSync(file + ".sha256", digest + "  " + path.basename(file) + "\n");
+          ' "$OUT"
+          ls -la dist/
+
+      - name: Upload release assets
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/RustTavern-*.zip
+            dist/RustTavern-*.zip.sha256
+            dist/RustTavern-*.tar.gz
+            dist/RustTavern-*.tar.gz.sha256
+          generate_release_notes: true
+
+  release:
+    name: create GitHub release
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Ensure release exists with generated notes
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1 || \
+            gh release create "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" \
+              --title "$GITHUB_REF_NAME" --generate-notes

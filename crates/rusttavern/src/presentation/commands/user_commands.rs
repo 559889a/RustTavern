@@ -1,0 +1,92 @@
+use std::sync::Arc;
+
+use crate::app::AppState;
+use crate::presentation::commands::helpers::{log_command, map_command_error};
+use crate::presentation::errors::CommandError;
+use tt_application::dto::user_dto::{CreateUserDto, UpdateUserDto, UserDto};
+
+pub async fn get_all_users(
+    state: Arc<AppState>,
+) -> Result<Vec<UserDto>, CommandError> {
+    log_command("get_all_users");
+
+    state
+        .services
+        .user_service
+        .get_all_users()
+        .await
+        .map_err(map_command_error("Failed to get all users"))
+}
+
+pub async fn get_user(
+    id: String,
+    state: Arc<AppState>,
+) -> Result<UserDto, CommandError> {
+    log_command(format!("get_user {}", id));
+
+    state
+        .services
+        .user_service
+        .get_user(&id)
+        .await
+        .map_err(map_command_error(format!("Failed to get user {}", id)))
+}
+
+pub async fn get_user_by_username(
+    username: String,
+    state: Arc<AppState>,
+) -> Result<UserDto, CommandError> {
+    log_command(format!("get_user_by_username {}", username));
+
+    state
+        .services
+        .user_service
+        .get_user_by_username(&username)
+        .await
+        .map_err(map_command_error(format!(
+            "Failed to get user by username {}",
+            username
+        )))
+}
+
+pub async fn create_user(
+    dto: CreateUserDto,
+    state: Arc<AppState>,
+) -> Result<UserDto, CommandError> {
+    log_command(format!("create_user {}", dto.username));
+
+    state
+        .services
+        .user_service
+        .create_user(dto)
+        .await
+        .map_err(map_command_error("Failed to create user"))
+}
+
+pub async fn update_user(
+    dto: UpdateUserDto,
+    state: Arc<AppState>,
+) -> Result<UserDto, CommandError> {
+    log_command(format!("update_user {}", dto.id));
+
+    state
+        .services
+        .user_service
+        .update_user(dto)
+        .await
+        .map_err(map_command_error("Failed to update user"))
+}
+
+pub async fn delete_user(
+    id: String,
+    state: Arc<AppState>,
+) -> Result<(), CommandError> {
+    log_command(format!("delete_user {}", id));
+
+    state
+        .services
+        .user_service
+        .delete_user(&id)
+        .await
+        .map_err(map_command_error(format!("Failed to delete user {}", id)))
+}

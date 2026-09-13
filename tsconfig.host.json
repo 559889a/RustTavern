@@ -1,0 +1,30 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "ES2020",
+    "moduleResolution": "Bundler",
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+
+    "allowJs": true,
+    "checkJs": false,
+    "noEmit": true,
+
+    "strict": true,
+    "exactOptionalPropertyTypes": true,
+    "noUncheckedIndexedAccess": true,
+    "useUnknownInCatchVariables": true,
+
+    "skipLibCheck": true,
+    "types": []
+  },
+  "include": [
+    "src/types.d.ts",
+    "src/host/main/context/**/*.js",
+    "src/host/main/kernel/**/*.js",
+    "src/host/main/services/**/*.js",
+    "src/host/main/ports/**/*.js",
+    "src/host/main/adapters/**/*.js",
+    "src/host/main/context.js"
+  ]
+}
+

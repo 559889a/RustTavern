@@ -1,0 +1,221 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  frontend:
+    name: frontend guards / types / contract tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+          run_install: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: pnpm install
+        run: pnpm install --frozen-lockfile
+
+      # The four architectural guards: host-kernel size/dependency boundaries,
+      # preload hints, logging targets, and Rust crate dependency direction.
+      - name: Frontend guardrails
+        run: pnpm run check:frontend
+
+      - name: Type-check the host kernel
+        run: pnpm run check:types
+
+      - name: Logging boundaries
+        run: pnpm run check:logging-boundaries
+
+      - name: Rust crate boundaries
+        run: pnpm run check:rust-boundaries
+
+      - name: Contract tests
+        run: pnpm run test:contracts
+
+  rust:
+    name: rust clippy / build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: ". -> target"
+
+      # build.rs generates the default-content manifest from default/, so the
+      # workspace needs no extra inputs beyond the checkout.
+      - name: cargo clippy
+        run: cargo clippy --workspace --all-targets -- -D warnings
+
+      # Not run on the 2-core/8GB development machine (see AGENTS.md build
+      # cadence); CI is where the Rust test suite actually gets exercised.
+      - name: cargo test
+        run: cargo test --workspace
+
+      - name: cargo build
+        run: cargo build --release -p rusttavern
+
+  build-windows:
+    name: build (windows-x64, debug artifact)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+          run_install: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: ". -> target"
+
+      - run: pnpm install --frozen-lockfile
+
+      # Debug build + the frontend bundles a checkout does not carry (they are
+      # gitignored build artifacts; the app cannot boot without them).
+      - name: Build frontend bundles
+        run: pnpm run web:build
+
+      - name: cargo build (debug)
+        run: cargo build -p rusttavern
+
+      - name: Upload debug artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: rusttavern-debug-windows-x64
+          path: |
+            target/debug/rusttavern.exe
+            packaging/windows/start.ps1
+            packaging/windows/start.cmd
+            default/config.yaml
+
+  build-linux:
+    name: build (linux-x64, debug artifact)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+          run_install: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: ". -> target"
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Build frontend bundles
+        run: pnpm run web:build
+
+      - name: cargo build (debug)
+        run: cargo build -p rusttavern
+
+      - name: Upload debug artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: rusttavern-debug-linux-x64
+          path: |
+            target/debug/rusttavern
+            default/config.yaml
+
+  build-termux:
+    name: build (android-arm64, debug artifact)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+          run_install: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Set up NDK
+        uses: nttld/setup-ndk@v1
+        id: setup-ndk
+        with:
+          ndk-version: r27c
+          add-to-path: true
+
+      # setup-ndk puts only the NDK root on PATH; the clang wrappers live one
+      # level deeper, and the CC/CXX/AR values below are bare names.
+      - name: Add NDK clang wrappers to PATH
+        run: echo "${{ steps.setup-ndk.outputs.ndk-path }}/toolchains/llvm/prebuilt/linux-x86_64/bin" >> "$GITHUB_PATH"
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-linux-android
+
+      # Pinned: 4.x renamed the platform flag from `-p` to `-P`/`--platform`
+      # and treats `-p` as cargo's `--package` passthrough.
+      - name: Install cargo-ndk
+        run: cargo install cargo-ndk --locked --version 4.1.2
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: ". -> target"
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Build frontend bundles
+        run: pnpm run web:build
+
+      - name: cargo ndk build (debug, arm64-v8a API 24+)
+        env:
+          ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
+          ANDROID_NDK_ROOT: ${{ steps.setup-ndk.outputs.ndk-path }}
+          CC_aarch64_linux_android: aarch64-linux-android24-clang
+          CXX_aarch64_linux_android: aarch64-linux-android24-clang++
+          AR_aarch64_linux_android: llvm-ar
+        run: cargo ndk -t arm64-v8a --platform 24 build -p rusttavern
+
+      - name: Upload debug artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: rusttavern-debug-android-arm64
+          path: |
+            target/aarch64-linux-android/debug/rusttavern
+            packaging/termux/start.sh

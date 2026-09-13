@@ -1,0 +1,81 @@
+# 媒体资源契约（Media Assets）现状
+
+本文档记录当前**已经落地**的“浏览器原生媒体加载契约”：`<video>` / `<audio>` 在桌面与移动端对用户静态资源端点（尤其是 `/backgrounds/*`）的请求方式，以及宿主目前承诺的响应语义。
+
+> 实现位置：`crates/tt-application/src/services/host_resource_service/user_data.rs`
+
+---
+
+## 1. 范围与结论
+
+目标（Public Contract）：
+
+- 上游 SillyTavern 与第三方扩展可以把 `/backgrounds/*` 等路径当作“普通 HTTP 资源端点”使用（子资源加载 + Range）。
+- 媒体文件（`video/*` / `audio/*`）必须满足浏览器媒体管线的最小网络契约：**支持 `Range`（单范围）并返回 `206 + Content-Range`**。
+
+涉及端点（由 Host Resource Service 提供）：
+
+- `/backgrounds/*`（图片背景 + 视频背景）
+- `/assets/*`、`/user/files/*`（可能承载音视频/下载内容）
+- 以及同一实现覆盖的其它用户静态资源：`/characters/*`、`/User Avatars/*`、`/user/images/*`
+
+---
+
+## 2. 端点基础语义（全平台）
+
+这些端点必须能被浏览器原生子资源加载（`<img src>` / `<video src>` / `CSS url()`），且 dev/prod 语义一致：
+
+- 仅接受 `GET` / `HEAD` / `OPTIONS`，其他方法返回 `405`
+- 未命中返回真实 `404`（不回退到 `index.html`）
+- `Content-Type` 必须与文件类型匹配（基于扩展名推断）
+- 成功响应使用 `Cache-Control: private, no-cache`、weak ETag 和 Last-Modified；完整表示与条件请求契约见 `docs/CurrentState/HostResourceCaching.md`
+- `Accept-Ranges: bytes`
+- 允许 data root 内的 symlink 指向外部文件或目录，以支持与 SillyTavern 共享同一套数据。
+
+第一方 `<img>`、`<video>`、CSS 与普通 fetch 必须直接使用这些 Host Resource URL。
+
+背景选择器的预览不改变媒体消费契约。GIF/WebP/APNG 可以按设置选择 raw 动画或 `static=true` first-frame JPEG；MP4 选择器使用占位图，因为当前不为 poster 引入视频解码依赖。
+
+---
+
+## 3. Range 契约（单范围）
+
+支持的 `Range` 形态（仅单范围）：
+
+- `Range: bytes=<start>-<end>`
+- `Range: bytes=<start>-`
+- `Range: bytes=-<suffixLen>`
+
+响应语义：
+
+- 满足范围：返回 `206 Partial Content`
+  - `Content-Range: bytes <start>-<end>/<total>`
+  - `Content-Length: <rangeLen>`
+- 非法/不满足：返回 `416 Range Not Satisfiable`
+  - `Content-Range: bytes */<total>`
+
+显式不支持：
+
+- multi-range（例如 `bytes=0-1,2-3`）会按“非法 Range”处理并返回 `416`。
+
+---
+
+## 4. 浏览器平台差异
+
+服务器形态下媒体端点由 axum 直接以标准 HTTP 交付，浏览器（含 Android Chrome / iOS Safari）原生处理 Range 与条件请求，不存在自定义拦截链路，因此没有平台特有的二次 Range workaround：
+
+- 移动浏览器对 `video/mp4` 的请求序列（`bytes=0-`、`bytes=131072-` 等）由服务器按第 3 节单范围语义直接响应 `206 + Content-Range`；
+- 不再需要"返回完整文件 bytes 让 WebView 自己 skip"的特殊路径；
+- `304` 条件请求在所有现代浏览器可用（无旧 WebView 3xx 缺失限制）。
+
+## 5. 回归与诊断要点
+
+最小回归探针（桌面/移动均适用）：
+
+- `fetch('/backgrounds/<file>.mp4', { headers: { Range: 'bytes=0-1' } })` 应返回 `206` 且包含 `Content-Range`
+- 对 `Range: bytes=131072-` 等非 0 起点 Range，应依然返回 `206` 且包含 `Content-Range`
+- 若 `<video>` 长时间停留在 `readyState=HAVE_NOTHING`，优先排查 Range 契约是否被破坏（`206`、`Content-Range`、以及是否出现快速 canceled）
+
+当需要确认媒体编码兼容性（解码层问题）：
+
+- 使用 `ffprobe` 检查视频编码/音频声道布局（部分移动浏览器对 AAC 5.1 可能存在兼容风险）。

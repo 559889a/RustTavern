@@ -1,0 +1,103 @@
+// @ts-check
+
+import { createInvokeService } from '../services/invokes/invoke-service.js';
+import { createCharacterService } from '../services/characters/character-service.js';
+import { createCharacterFormService } from '../services/characters/character-form-service.js';
+import { createCharacterCreateService } from '../services/characters/character-create-service.js';
+import { createUploadService } from '../services/uploads/upload-service.js';
+import { createReadableFileStreamService } from '../services/files/readable-file-stream-service.js';
+import { installLifecycleFlushHandlers, registerLifecycleFlushHandler } from '../services/lifecycle/lifecycle-flush-service.js';
+import { createHostInvokePolicies } from '../kernel/invokes/invoke-policies.js';
+import { installAssetPathHelpers } from './asset-path-helpers.js';
+import {
+    ensureJsonl,
+    stripJsonl,
+    toFrontendChat,
+    formatFileSize,
+    parseTimestamp,
+    exportChatAsText,
+    exportChatAsJsonl,
+} from '../kernel/chat-utils.js';
+
+/**
+ * @typedef {import('./types.js').TauriInvokeFn} TauriInvokeFn
+ * @typedef {import('./types.js').TauriMainContext} TauriMainContext
+ */
+
+/**
+ * @param {{ invoke: TauriInvokeFn }} deps
+ * @returns {TauriMainContext}
+ */
+export function createTauriMainContext({ invoke }) {
+    const THUMBNAIL_ROUTE_TYPES = new Set(['bg', 'avatar', 'persona']);
+
+    const invokeService = createInvokeService({
+        invoke,
+        policies: createHostInvokePolicies(),
+    });
+
+    const characterService = createCharacterService({ safeInvoke: invokeService.safeInvoke });
+    const uploadService = createUploadService({
+        safeInvoke: invokeService.safeInvoke,
+        invoke,
+    });
+    const readableFileStreamService = createReadableFileStreamService({ invoke });
+    const characterCreateService = createCharacterCreateService({
+        safeInvoke: invokeService.safeInvoke,
+        materializeUploadFile: uploadService.materializeUploadFile,
+    });
+    const characterFormService = createCharacterFormService({
+        safeInvoke: invokeService.safeInvoke,
+        resolveCharacterId: characterService.resolveCharacterId,
+        resolveExistingCharacterId: characterService.resolveExistingCharacterId,
+        materializeUploadFile: uploadService.materializeUploadFile,
+    });
+
+    /** @param {string} filePath */
+    async function removeTemporaryFile(filePath) {
+        await uploadService.removeTempUploadFile(filePath, invoke);
+    }
+
+    installAssetPathHelpers({
+        thumbnailRouteTypes: THUMBNAIL_ROUTE_TYPES,
+    });
+    registerLifecycleFlushHandler('invoke-broker', invokeService.flushAllInvokes, { priority: 100 });
+    installLifecycleFlushHandlers();
+
+    return {
+        safeInvoke: invokeService.safeInvoke,
+        invalidateInvoke: invokeService.invalidateInvoke,
+        invalidateInvokeAll: invokeService.invalidateInvokeAll,
+        flushInvokes: invokeService.flushInvokes,
+        flushAllInvokes: invokeService.flushAllInvokes,
+        get invokeTransport() {
+            return invokeService.invokeTransport;
+        },
+        set invokeTransport(next) {
+            invokeService.invokeTransport = next;
+        },
+        invokeBroker: invokeService.invokeBroker,
+        normalizeCharacter: characterService.normalizeCharacter,
+        normalizeExtensions: characterService.normalizeExtensions,
+        getAllCharacters: characterService.getAllCharacters,
+        resolveCharacterId: characterService.resolveCharacterId,
+        resolveExistingCharacterId: characterService.resolveExistingCharacterId,
+        getSingleCharacter: characterService.getSingleCharacter,
+        ensureJsonl,
+        stripJsonl,
+        toFrontendChat,
+        formatFileSize,
+        parseTimestamp,
+        exportChatAsText,
+        exportChatAsJsonl,
+        findAvatarByCharacterId: characterService.findAvatarByCharacterId,
+        createCharacterFromForm: characterCreateService.createCharacterFromForm,
+        createCharacterFromPayload: characterCreateService.createCharacterFromPayload,
+        editCharacterFromForm: characterFormService.editCharacterFromForm,
+        editCharacterAvatarFromForm: characterFormService.editCharacterAvatarFromForm,
+        uploadAvatarFromForm: characterFormService.uploadAvatarFromForm,
+        materializeUploadFile: uploadService.materializeUploadFile,
+        removeTemporaryFile,
+        createReadableFileStream: readableFileStreamService.createReadableFileStream,
+    };
+}

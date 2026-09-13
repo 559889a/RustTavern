@@ -1,0 +1,68 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+.cache
+*.local
+.playwright-mcp
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea
+.cursor/
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Build artifacts
+release
+/target/
+.flatpak-build/
+.flatpak-builder/
+packaging/flatpak/build-identity.env
+
+# 本机测试环境专用（精简 Windows 镜像 API 缺失 hack）——禁止提交
+stub-synch.c
+stub-comctl.c
+winrt-error-stub.c
+loader-diag.cs
+winsxs-synch-orig.dll
+
+# crates.io 镜像源配置（本机网络专用；如需提交请先讨论）
+cargo-rsproxy-config.toml
+
+# 脚本中间产物
+scripts/generated-registry.txt
+
+# 本机调试运行时数据根（--data-root ./runtime-data 或重定向的服务器日志）
+runtime-data/
+
+# 发布链路中间产物（Wave 5 P2）
+.flatpak-release/
+flatpak-build.tar.zst
+
+# 本机 Android 交叉编译（NDK 路径是本机专用）
+.cargo/config.toml
+
+# 本机内部文档：含本机绝对路径、局域网地址、手机 ssh 密钥名与部署拓扑。
+# 只用于本地开发，不进公开仓库（pack-dist 也已将它们排除在分发之外）。
+docs/CurrentState/ClaudeCodeHandoff.md
+docs/CurrentState/NextHarnessHandoff.md
+docs/CurrentState/FrontendPerfHandoff.md
+docs/CurrentState/HttpServerMigrationLog.md
+packaging/termux/README.md
+packaging/windows/README.md
+scripts/local-android-build.sh
